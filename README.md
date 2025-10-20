@@ -1,6 +1,6 @@
 # Gerenciador de Tarefas (JSF + JPA)
 
-Aplicação web para controle de tarefas construída com Jakarta EE (javax), PrimeFaces e Hibernate. Permite cadastrar, editar, filtrar e concluir tarefas mantendo foco nas atividades em andamento.
+Aplicação web para controle de tarefas construída com Javax, PrimeFaces e Hibernate. Permite cadastrar, editar, filtrar e concluir tarefas mantendo foco nas atividades em andamento.
 
 ## Principais recursos
 - Cadastro completo de tarefas com validação (título, descrição, responsável, prioridade, prazo e situação).
