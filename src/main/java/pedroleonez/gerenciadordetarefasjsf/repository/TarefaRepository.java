@@ -2,6 +2,7 @@ package pedroleonez.gerenciadordetarefasjsf.repository;
 
 import pedroleonez.gerenciadordetarefasjsf.model.Tarefa;
 
+import javax.annotation.PostConstruct;
 import javax.enterprise.context.ApplicationScoped;
 import javax.persistence.*;
 import java.util.*;
@@ -12,49 +13,51 @@ import java.util.*;
 @ApplicationScoped
 public class TarefaRepository {
 
-    @PersistenceUnit(unitName = "tarefasPU")
     private EntityManagerFactory emf;
 
-    public TarefaRepository() {
-        // fallback: inicializa manualmente se @PersistenceUnit falhar (Heroku/Tomcat)
-        if (this.emf == null) {
-            System.out.println("⚙️ Inicializando EntityManagerFactory manualmente...");
-            this.emf = buildEntityManagerFactory();
-        }
-    }
+    public TarefaRepository() {}
 
-    /**
-     * Cria o EntityManagerFactory dinamicamente.
-     * Detecta DATABASE_URL (Heroku) e converte para formato JDBC PostgreSQL.
-     */
-    private EntityManagerFactory buildEntityManagerFactory() {
+    @PostConstruct
+    public void init() {
         try {
-            String databaseUrl = System.getenv("DATABASE_URL");
-            Map<String, Object> props = new HashMap<>();
+            if (this.emf == null) {
+                System.out.println("⚙️ Inicializando EntityManagerFactory via TarefaRepository.init()...");
 
-            if (databaseUrl != null && databaseUrl.startsWith("postgres://")) {
-                // converte "postgres://user:pass@host:port/db" → "jdbc:postgresql://host:port/db"
-                String jdbcUrl = "jdbc:postgresql://" + databaseUrl.substring("postgres://".length());
-                props.put("javax.persistence.jdbc.url", jdbcUrl);
-                props.put("javax.persistence.jdbc.driver", "org.postgresql.Driver");
-                props.put("hibernate.dialect", "org.hibernate.dialect.PostgreSQLDialect");
-                props.put("hibernate.hbm2ddl.auto", "update");
-                props.put("hibernate.show_sql", "true");
-                props.put("hibernate.format_sql", "true");
-                props.put("hibernate.connection.sslmode", "require");
+                String databaseUrl = System.getenv("DATABASE_URL");
+                Map<String, Object> props = new HashMap<>();
 
-                System.out.println("✅ Conectando ao PostgreSQL do Heroku: " + jdbcUrl);
-            } else {
-                // fallback local (H2)
-                System.err.println("⚠️ DATABASE_URL não encontrada. Usando H2 em memória.");
-                props.put("javax.persistence.jdbc.driver", "org.h2.Driver");
-                props.put("javax.persistence.jdbc.url", "jdbc:h2:mem:tarefas;DB_CLOSE_DELAY=-1;MODE=PostgreSQL");
-                props.put("hibernate.dialect", "org.hibernate.dialect.H2Dialect");
-                props.put("hibernate.hbm2ddl.auto", "update");
-                props.put("hibernate.show_sql", "true");
+                if (databaseUrl != null && databaseUrl.startsWith("postgres://")) {
+                    // converte postgres://user:pass@host:port/db → jdbc:postgresql://host:port/db
+                    String jdbcUrl = "jdbc:postgresql://" + databaseUrl.substring("postgres://".length());
+                    String[] parts = jdbcUrl.split("@");
+                    String creds = parts[0].replace("jdbc:postgresql://", "");
+                    String[] userPass = creds.split(":");
+                    String user = userPass[0];
+                    String passAndHost = userPass[1];
+                    String[] passHost = passAndHost.split("@");
+
+                    // credenciais não são necessárias aqui, pois virão pela URL completa
+                    props.put("javax.persistence.jdbc.url", jdbcUrl);
+                    props.put("javax.persistence.jdbc.driver", "org.postgresql.Driver");
+                    props.put("hibernate.dialect", "org.hibernate.dialect.PostgreSQLDialect");
+                    props.put("hibernate.hbm2ddl.auto", "update");
+                    props.put("hibernate.show_sql", "true");
+                    props.put("hibernate.format_sql", "true");
+                    props.put("hibernate.connection.sslmode", "require");
+
+                    System.out.println("✅ Conectando ao PostgreSQL do Heroku: " + jdbcUrl);
+                } else {
+                    // fallback local (H2)
+                    System.err.println("⚠️ DATABASE_URL não encontrada. Usando H2 em memória.");
+                    props.put("javax.persistence.jdbc.driver", "org.h2.Driver");
+                    props.put("javax.persistence.jdbc.url", "jdbc:h2:mem:tarefas;DB_CLOSE_DELAY=-1;MODE=PostgreSQL");
+                    props.put("hibernate.dialect", "org.hibernate.dialect.H2Dialect");
+                    props.put("hibernate.hbm2ddl.auto", "update");
+                    props.put("hibernate.show_sql", "true");
+                }
+
+                this.emf = Persistence.createEntityManagerFactory("tarefasPU", props);
             }
-
-            return Persistence.createEntityManagerFactory("tarefasPU", props);
         } catch (Exception e) {
             e.printStackTrace();
             throw new IllegalStateException("Erro ao inicializar EntityManagerFactory: " + e.getMessage(), e);
