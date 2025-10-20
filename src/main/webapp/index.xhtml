@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:f="http://xmlns.jcp.org/jsf/core"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:ui="http://xmlns.jcp.org/jsf/facelets">
+
+<h:head>
+    <title>Gerenciador de Tarefas</title>
+    <meta charset="UTF-8" />
+    <h:outputStylesheet name="primeicons/primeicons.css" library="primefaces" />
+    <h:outputStylesheet name="app.css" library="css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+
+    <style>
+
+        body {
+            background: linear-gradient(135deg, #eef2f7, #dfe6ee);
+            margin: 0;
+            padding: 0;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .container-principal {
+            width: 70%;
+            max-width: 1200px;
+            margin: 20px auto 40px;
+            background: #fff;
+            border-radius: 14px;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            transition: all 0.3s ease;
+        }
+
+        h2, .ui-dialog-titlebar, .ui-panel-titlebar, .ui-accordion-header {
+            font-weight: 700;
+        }
+
+        h2 {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: row;
+            gap: 10px;
+        }
+
+        h2 .main-title {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            color: #000;
+            font-size: 1.5rem;
+            letter-spacing: 0.5px;
+        }
+
+        .filtro-flex {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 40px;
+        }
+
+        .botoes-centro {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 15px;
+        }
+
+        /* Estilos do diálogo modal de tarefa */
+        .ui-dialog {
+            border-radius: 12px !important;
+            border: none !important;
+            overflow: hidden !important;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            font-size: 1rem;
+            backdrop-filter: blur(6px);
+        }
+
+        .dialog-messages {
+            font-size: 0.8rem;
+        }
+
+        .dialog-messages .ui-messages-error-icon,
+        .dialog-messages .ui-messages-info-icon,
+        .dialog-messages .ui-messages-warn-icon,
+        .dialog-messages .ui-messages-fatal-icon,
+        .dialog-messages .ui-message-error-icon,
+        .dialog-messages .ui-message-info-icon,
+        .dialog-messages .ui-message-warn-icon,
+        .dialog-messages .ui-message-fatal-icon {
+            display: none !important;
+        }
+
+        .dialog-nova-tarefa .ui-dialog-content {
+            max-height: 70vh !important;
+            overflow-y: auto !important;
+        }
+
+        .ui-dialog-titlebar {
+            background: linear-gradient(135deg, #3949ab, #1a237e) !important; /* azul suave */
+            color: #fff;
+            letter-spacing: 0.5px;
+        }
+
+        .ui-dialog-content {
+            padding-top: 1.5em !important;
+        }
+
+        /* Labels e inputs */
+        label, .ui-outputlabel {
+            font-size: clamp(0.9rem, 1vw, 1rem);
+            color: #333;
+        }
+
+        .ui-inputtext, .ui-inputtextarea, .ui-selectonemenu, .ui-calendar {
+            font-size: clamp(0.9rem, 1vw, 1rem);
+            border: 1px solid #c5cae9;
+            transition: 0.2s;
+        }
+
+        .ui-widget-header {
+            background-color: transparent !important;
+            border: none !important;
+        }
+
+        /* Botões */
+        .ui-button {
+            font-size: clamp(0.85rem, 1vw, 0.95rem);
+        }
+
+        /* Tabela */
+        .ui-datatable {
+            font-size: clamp(0.85rem, 1vw, 0.95rem);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .ui-datatable table {
+            table-layout: fixed;
+            width: 100%;
+        }
+
+        .ui-datatable th {
+            background-color: #e8eaf6 !important;
+            color: #1a237e !important;
+            font-weight: 600;
+            text-align: center;
+            white-space: normal;
+            word-break: break-word;
+        }
+
+        .ui-datatable td {
+            white-space: normal;
+            word-break: break-word;
+        }
+
+        .ui-datatable tr:nth-child(even) {
+            background-color: #f5f6fa;
+        }
+
+        .ui-datatable tr:hover {
+            background-color: #e3e6f7;
+            transition: 0.2s;
+        }
+
+        .acoes-tabela {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* Ícones */
+        .pi {
+            font-size: 1.2em;
+        }
+
+        /* Accordion estilizado */
+        .ui-accordion {
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+            background-color: #fff;
+        }
+
+        .campo-filtro {
+            display: flex;
+            flex-direction: row;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .ui-accordion .ui-accordion-header {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            gap: 10px;
+            padding: 1em 1.4em;
+            background: linear-gradient(135deg, #3949ab, #1a237e) !important;
+            color: #fff !important;
+            font-weight: 600;
+            font-size: 1rem;
+            border: none;
+            cursor: pointer;
+        }
+
+        /* Hover do cabeçalho do accordion */
+        .ui-accordion .ui-accordion-header:hover {
+            background: linear-gradient(135deg, #5c6bc0, #283593);
+            filter: brightness(1.05);
+            transition: 0.2s;
+        }
+
+        .ui-accordion .ui-accordion-content {
+            background-color: #fafafa;
+            padding: 1em;
+
+            /* === Correção geral do filtro no mobile === */
+            @media (max-width: 768px) {
+                .filtro-flex {
+                    flex-direction: column;
+                    gap: 6px !important; /* reduz espaço entre campos */
+                }
+
+                .campo-filtro {
+                    width: 100%;
+                    margin-bottom: 4px !important;
+                }
+
+                /* Remove margens internas automáticas dos componentes PrimeFaces */
+                .campo-filtro .ui-inputtext,
+                .campo-filtro .ui-selectonemenu,
+                .campo-filtro .ui-calendar {
+                    margin-bottom: 0 !important;
+                }
+
+                .ui-accordion .ui-accordion-content {
+                    padding: 0.5em 0.8em !important; /* menos padding interno */
+                }
+
+                .ui-accordion {
+                    box-shadow: none !important;
+                }
+
+                .ui-accordion .ui-accordion-header {
+                    padding: 0.6em 0.8em !important;
+                    font-size: 1rem;
+                }
+
+                .botoes-centro {
+                    margin-top: 8px;
+                }
+
+                .ui-datatable {
+                    font-size: 0.8rem;
+                }
+
+            }
+
+        }
+
+        @media (max-width: 768px) {
+            .acoes-tabela {
+                flex-direction: column;
+                gap: 8px;
+            }
+        }
+
+
+    </style>
+
+</h:head>
+
+<h:body style="background-color:#f4f6f8; font-family:Arial,sans-serif; margin:0; padding:0;">
+    <ui:include src="/WEB-INF/includes/header.xhtml" />
+    <div class="container-principal">
+
+        <h2>
+            <i class="pi pi-list"></i>
+            <span class="main-title">Gerenciador de Tarefas</span>
+        </h2>
+
+        <!-- Dialog para criar/editar tarefa -->
+        <p:dialog id="dlgNovaTarefa" widgetVar="dlgNovaTarefa"
+                  modal="true" resizable="false" closable="true"
+                  blockScroll="true"
+                  styleClass="dialog-nova-tarefa"
+                  style="width:95%; max-width:500px;"
+                  showEffect="fade" hideEffect="fade"
+                  showEffectSpeed="400" hideEffectSpeed="400"
+                  contentStyle="max-height:70vh; overflow-y:auto;">
+
+            <f:facet name="header">
+                <h:outputText value="#{tarefaBean.novaTarefa.id == null ? 'Nova Tarefa' : 'Editar Tarefa'}" />
+            </f:facet>
+
+            <h:form id="formNovaTarefaDialog">
+                <p:messages id="dialogMessages"
+                            showDetail="true"
+                            skipDetailIfEqualsSummary="true"
+                            closable="true"
+                            autoUpdate="true"
+                            styleClass="dialog-messages" />
+                <p:panelGrid columns="2" columnClasses="p-col-12 p-md-6, p-col-12 p-md-6" styleClass="p-fluid">
+
+                    <p:outputLabel for="tituloTarefa" value="Título" />
+                    <p:inputText id="tituloTarefa"
+                                 value="#{tarefaBean.novaTarefa.titulo}"
+                                 required="true"
+                                 label="Título"
+                                 requiredMessage="Informe o título da tarefa." />
+
+                    <p:outputLabel for="descricaoTarefa" value="Descrição" />
+                    <p:inputTextarea id="descricaoTarefa"
+                                     value="#{tarefaBean.novaTarefa.descricao}"
+                                     rows="4"
+                                     required="true"
+                                     label="Descrição"
+                                     requiredMessage="Informe a descrição da tarefa." />
+
+                    <p:outputLabel for="responsavelTarefa" value="Responsável" />
+                    <p:selectOneMenu id="responsavelTarefa"
+                                     value="#{tarefaBean.novaTarefa.responsavel}"
+                                     required="true"
+                                     label="Responsável"
+                                     requiredMessage="Selecione um responsável.">
+                        <f:selectItem itemLabel="Selecione" itemValue="" noSelectionOption="true" />
+                        <f:selectItems value="#{tarefaBean.responsaveis}" />
+                    </p:selectOneMenu>
+
+                    <p:outputLabel for="prioridadeTarefa" value="Prioridade" />
+                    <p:selectOneMenu id="prioridadeTarefa"
+                                     value="#{tarefaBean.novaTarefa.prioridade}"
+                                     required="true"
+                                     label="Prioridade"
+                                     requiredMessage="Selecione a prioridade da tarefa.">
+                        <f:selectItem itemLabel="Selecione" itemValue="" noSelectionOption="true" />
+                        <f:selectItems value="#{tarefaBean.prioridades}" var="p" itemLabel="#{p.label}" itemValue="#{p}" />
+                    </p:selectOneMenu>
+
+                    <p:outputLabel for="deadlineTarefa" value="Deadline" />
+                    <p:calendar id="deadlineTarefa" value="#{tarefaBean.data}"
+                                mindate="#{tarefaBean.today}" pattern="dd/MM/yyyy"
+                                showIcon="true" required="true"
+                                label="Deadline"
+                                requiredMessage="Informe a data limite da tarefa." />
+                </p:panelGrid>
+
+                <div class="botoes-centro">
+                    <p:commandButton id="btnSalvar"
+                                     value="Salvar"
+                                     icon="pi pi-save"
+                                     action="#{tarefaBean.salvarTarefa}"
+                                     process="@form"
+                                     update=":formNovaTarefaDialog :tabelaForm:tabelaTarefas"
+                                     oncomplete="if (typeof args === 'undefined' || !args.validationFailed) { PF('dlgNovaTarefa').hide(); }"
+                                     styleClass="ui-button-primary" />
+
+                    <p:tooltip for="btnSalvar" value="Clique para salvar a tarefa" showEffect="fade" hideEffect="fade" />
+
+                    <p:commandButton id="btnCancelar"
+                                     value="Cancelar"
+                                     icon="pi pi-times"
+                                     onclick="PF('dlgNovaTarefa').hide(); return false;"
+                                     styleClass="ui-button-secondary" />
+
+                    <p:tooltip for="btnCancelar" value="Cancelar e fechar o diálogo" showEffect="fade" hideEffect="fade" />
+                </div>
+
+            </h:form>
+        </p:dialog>
+
+        <!-- Barra superior com botão de nova tarefa -->
+        <h:form id="novaTarefaForm">
+            <p:toolbar style="margin-bottom:20px;">
+                <p:toolbarGroup>
+                    <p:commandButton id="btnNovaTarefa"
+                                     value="Nova Tarefa" icon="pi pi-plus"
+                                     actionListener="#{tarefaBean.prepararNovaTarefa}"
+                                     update=":formNovaTarefaDialog :dlgNovaTarefa"
+                                     oncomplete="PF('dlgNovaTarefa').show();"
+                                     styleClass="ui-button-primary" />
+                    <p:tooltip for="btnNovaTarefa" value="Criar uma nova tarefa" showEffect="fade" hideEffect="fade" />
+                </p:toolbarGroup>
+            </p:toolbar>
+        </h:form>
+
+        <!-- Filtro de Tarefas -->
+        <h:form id="filtroForm">
+            <p:accordionPanel multiple="false" style="margin-bottom:20px;">
+                <p:tab title="Filtrar Tarefas">
+                    <div class="filtro-flex">
+                        <div class="campo-filtro">
+                            <p:outputLabel for="filtroId" value="Número" />
+                            <p:inputText id="filtroId" value="#{tarefaBean.filtroId}" />
+                        </div>
+
+                        <div class="campo-filtro">
+                            <p:outputLabel for="filtroTitulo" value="Título/Descrição" />
+                            <p:inputText id="filtroTitulo" value="#{tarefaBean.filtroTitulo}" />
+                        </div>
+
+                        <div class="campo-filtro">
+                            <p:outputLabel for="filtroResponsavel" value="Responsável" />
+                            <p:selectOneMenu id="filtroResponsavel" value="#{tarefaBean.filtroResponsavel}">
+                                <f:selectItem itemLabel="Todos" itemValue="" />
+                                <f:selectItems value="#{tarefaBean.responsaveis}" />
+                            </p:selectOneMenu>
+                        </div>
+
+                        <div class="campo-filtro">
+                            <p:outputLabel for="filtroSituacao" value="Situação" />
+                            <p:selectOneMenu id="filtroSituacao" value="#{tarefaBean.filtroSituacao}">
+                                <f:selectItem itemLabel="Todas" itemValue="" />
+                                <f:selectItems value="#{tarefaBean.situacoes}" var="s" itemLabel="#{s.label}" itemValue="#{s}" />
+                            </p:selectOneMenu>
+                        </div>
+                    </div>
+
+                    <div class="botoes-centro">
+                        <p:commandButton id="btnBuscar"
+                                         value="Buscar"
+                                         icon="pi pi-search"
+                                         action="#{tarefaBean.filtrarTarefas}"
+                                         update=":tabelaForm:tabelaTarefas"
+                                         styleClass="ui-button-outlined ui-button-primary" />
+
+                        <p:tooltip for="btnBuscar" value="Filtrar tarefas com os critérios selecionados" showEffect="fade" hideEffect="fade" />
+                    </div>
+
+                </p:tab>
+            </p:accordionPanel>
+        </h:form>
+
+        <!-- Tabela de Tarefas -->
+        <h:form id="tabelaForm">
+            <p:dataTable id="tabelaTarefas"
+                         value="#{tarefaBean.tarefas}"
+                         var="t"
+                         paginator="true" rows="10"
+                         responsiveLayout="scroll"
+                         emptyMessage="Nenhuma tarefa encontrada."
+                         style="margin-top:10px; width:100%;">
+
+                <p:column headerText="Número" style="width:3%; text-align:center;">
+                    <h:outputText value="#{t.id}" />
+                </p:column>
+
+                <p:column headerText="Título" style="width:15%;">
+                    <h:outputText value="#{t.titulo}" />
+                </p:column>
+
+                <p:column headerText="Responsável" style="width:10%;">
+                    <h:outputText value="#{t.responsavel}" />
+                </p:column>
+
+                <p:column headerText="Ações" style="width:10%; text-align:center;" styleClass="col-acoes">
+                    <div class="acoes-tabela">
+                        <p:commandButton icon="pi pi-pencil" title="Editar"
+                                         actionListener="#{tarefaBean.prepararEdicao(t)}"
+                                         update=":formNovaTarefaDialog :dlgNovaTarefa"
+                                         oncomplete="PF('dlgNovaTarefa').show();"
+                                         styleClass="ui-button-outlined ui-button-secondary" />
+
+                        <p:commandButton icon="pi pi-trash" title="Remover"
+                                         action="#{tarefaBean.removerTarefa(t.id)}"
+                                         update="tabelaTarefas"
+                                         styleClass="ui-button-danger ui-button-outlined" />
+
+                        <p:commandButton icon="pi pi-check" title="Concluir"
+                                         action="#{tarefaBean.concluirTarefa(t.id)}"
+                                         update="tabelaTarefas"
+                                         styleClass="ui-button-success ui-button-outlined" />
+                    </div>
+                </p:column>
+
+            </p:dataTable>
+        </h:form>
+
+    </div>
+
+    <!-- Ajusta tooltips conforme o accordion é expandido -->
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const headers = document.querySelectorAll(".ui-accordion-header");
+            headers.forEach(header => {
+                // Inicializa com tooltip padrão
+                header.setAttribute("title", "Clique para expandir");
+
+                header.addEventListener("click", () => {
+                    // Pequeno atraso para esperar a animação do PrimeFaces
+                    setTimeout(() => {
+                        if (header.classList.contains("ui-state-active")) {
+                            header.setAttribute("title", "Clique para fechar");
+                        } else {
+                            header.setAttribute("title", "Clique para expandir");
+                        }
+                    }, 300);
+                });
+            });
+        });
+    </script>
+
+</h:body>
+</html>
