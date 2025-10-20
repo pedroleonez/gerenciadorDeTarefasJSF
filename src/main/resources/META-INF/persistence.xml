@@ -2,26 +2,43 @@
 <persistence xmlns="http://xmlns.jcp.org/xml/ns/persistence"
              xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
              xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/persistence
-                                 http://xmlns.jcp.org/xml/ns/persistence/persistence_2_2.xsd"
+             http://xmlns.jcp.org/xml/ns/persistence/persistence_2_2.xsd"
              version="2.2">
 
     <persistence-unit name="tarefasPU" transaction-type="RESOURCE_LOCAL">
         <provider>org.hibernate.jpa.HibernatePersistenceProvider</provider>
+
         <class>pedroleonez.gerenciadordetarefasjsf.model.Tarefa</class>
 
         <properties>
-            <!-- JDBC via variáveis de ambiente (Heroku / Render / local) -->
+            <!-- 🌍 Detecta ambiente automaticamente -->
             <property name="javax.persistence.jdbc.driver" value="org.postgresql.Driver"/>
-            <property name="javax.persistence.jdbc.url" value="${JDBC_DATABASE_URL}"/>
-            <property name="javax.persistence.jdbc.user" value="${JDBC_DATABASE_USERNAME}"/>
-            <property name="javax.persistence.jdbc.password" value="${JDBC_DATABASE_PASSWORD}"/>
 
-            <!-- Configuração Hibernate -->
+            <!-- 🧠 Se estiver no Heroku, usa as variáveis JDBC_DATABASE_* -->
+            <property name="javax.persistence.jdbc.url"
+                      value="#{systemEnvironment['JDBC_DATABASE_URL'] != null ?
+                               systemEnvironment['JDBC_DATABASE_URL'] :
+                               'jdbc:postgresql://localhost:5432/gerenciador_tarefas'}"/>
+
+            <property name="javax.persistence.jdbc.user"
+                      value="#{systemEnvironment['JDBC_DATABASE_USERNAME'] != null ?
+                               systemEnvironment['JDBC_DATABASE_USERNAME'] :
+                               'postgres'}"/>
+
+            <property name="javax.persistence.jdbc.password"
+                      value="#{systemEnvironment['JDBC_DATABASE_PASSWORD'] != null ?
+                               systemEnvironment['JDBC_DATABASE_PASSWORD'] :
+                               'postgres'}"/>
+
             <property name="hibernate.dialect" value="org.hibernate.dialect.PostgreSQLDialect"/>
             <property name="hibernate.hbm2ddl.auto" value="update"/>
-            <property name="hibernate.show_sql" value="true"/>
-            <property name="hibernate.format_sql" value="true"/>
-            <property name="hibernate.connection.sslmode" value="require"/>
+            <property name="hibernate.show_sql" value="false"/>
+            <property name="hibernate.format_sql" value="false"/>
+
+            <!-- 🔒 SSL para Render/Heroku -->
+            <property name="hibernate.connection.sslmode"
+                      value="#{systemEnvironment['JDBC_DATABASE_URL'] != null ? 'require' : 'disable'}"/>
         </properties>
     </persistence-unit>
+
 </persistence>
