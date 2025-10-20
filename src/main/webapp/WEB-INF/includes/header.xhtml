@@ -1,0 +1,15 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="http://xmlns.jcp.org/jsf/html"
+                xmlns:p="http://primefaces.org/ui"
+                xmlns:ui="http://xmlns.jcp.org/jsf/facelets">
+    <!-- Cabeçalho compartilhado entre as páginas JSF -->
+    <h:panelGroup layout="block" styleClass="app-header">
+        <h:panelGroup layout="block" styleClass="app-header__title">
+            <h:outputText value="Gerenciador de Tarefas" />
+        </h:panelGroup>
+        <div class="app-header__actions">
+            <p:button value="Início" outcome="index" styleClass="ui-button-outlined ui-button-secondary" />
+            <p:button value="Sobre" outcome="sobre" styleClass="ui-button-primary" />
+        </div>
+    </h:panelGroup>
+</ui:composition>
