@@ -9,18 +9,19 @@
         <class>pedroleonez.gerenciadordetarefasjsf.model.Tarefa</class>
         <properties>
             <!-- Heroku / Render Database configuração -->
-            <property name="jakarta.persistence.jdbc.driver" value="org.postgresql.Driver" />
-            <property name="jakarta.persistence.jdbc.url" value="${JDBC_DATABASE_URL}" />
-            <property name="jakarta.persistence.jdbc.user" value="${JDBC_DATABASE_USERNAME}" />
-            <property name="jakarta.persistence.jdbc.password" value="${JDBC_DATABASE_PASSWORD}" />
+            <property name="javax.persistence.jdbc.driver" value="org.postgresql.Driver" />
+            <property name="javax.persistence.jdbc.url" value="${JDBC_DATABASE_URL}" />
+            <property name="javax.persistence.jdbc.user" value="${JDBC_DATABASE_USERNAME}" />
+            <property name="javax.persistence.jdbc.password" value="${JDBC_DATABASE_PASSWORD}" />
 
-            <!-- Hibernate Dialect para PostgreSQL -->
+            <!-- Hibernate config -->
             <property name="hibernate.dialect" value="org.hibernate.dialect.PostgreSQLDialect" />
-
-            <!-- Hibernate -->
             <property name="hibernate.hbm2ddl.auto" value="update" />
             <property name="hibernate.show_sql" value="true" />
             <property name="hibernate.format_sql" value="true" />
+
+            <!-- Render exige SSL -->
+            <property name="hibernate.connection.sslmode" value="require" />
         </properties>
 
     </persistence-unit>
