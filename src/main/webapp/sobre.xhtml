@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:f="http://xmlns.jcp.org/jsf/core"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:ui="http://xmlns.jcp.org/jsf/facelets">
+
+<h:head>
+    <title>Sobre - Gerenciador de Tarefas</title>
+    <meta charset="UTF-8" />
+    <h:outputStylesheet name="app.css" library="css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+
+    <style>
+        body {
+            background: linear-gradient(135deg, #eef2f7, #dfe6ee);
+            margin: 0;
+            padding: 0;
+            color: #333;
+            line-height: 1.6;
+            font-family: Arial, sans-serif;
+        }
+
+        .container-sobre {
+            width: 70%;
+            max-width: 1200px;
+            margin: 20px auto 40px;
+            background: #fff;
+            border-radius: 14px;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+        }
+
+        .container-sobre h2 {
+            font-size: clamp(1.4rem, 2.5vw, 1.8rem);
+            color: #1a237e;
+            margin-bottom: 16px;
+        }
+
+        .container-sobre p {
+            margin-bottom: 14px;
+        }
+
+        .container-sobre ul {
+            padding-left: 20px;
+            margin-bottom: 16px;
+        }
+
+        .container-sobre li {
+            margin-bottom: 8px;
+        }
+
+        @media (max-width: 768px) {
+            .container-sobre {
+                width: 90%;
+                padding: 20px;
+            }
+        }
+    </style>
+</h:head>
+
+<h:body>
+    <ui:include src="/WEB-INF/includes/header.xhtml" />
+
+    <div class="container-sobre">
+        <h2>Sobre o Gerenciador de Tarefas</h2>
+        <p>
+            O Gerenciador de Tarefas é uma aplicação construída com Javax, PrimeFaces e Hibernate
+            para ajudar equipes a acompanhar atividades do dia a dia. Ele permite criar, editar, filtrar
+            e concluir tarefas de forma simples, mantendo o foco apenas no que ainda precisa ser feito.
+        </p>
+        <p>
+            Alguns destaques:
+        </p>
+        <ul>
+            <li>Cadastro rápido com validações claras para evitar dados inconsistentes.</li>
+            <li>Filtro dinâmico por responsável, prioridade, situação e palavras-chave.</li>
+            <li>Interface responsiva pensada para desktop e dispositivos móveis.</li>
+            <li>Integração com banco de dados PostgreSQL, garantindo persistência das tarefas.</li>
+        </ul>
+        <p>
+            Este projeto serve tanto como um exemplo de arquitetura JSF moderna quanto como um ponto de partida
+            para soluções personalizadas de gestão de atividades. Conheça mais trabalhos em
+            <h:outputLink value="https://github.com/pedroleonez" target="_blank">github.com/pedroleonez</h:outputLink>.
+        </p>
+    </div>
+</h:body>
+</html>
