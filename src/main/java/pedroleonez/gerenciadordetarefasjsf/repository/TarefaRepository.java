@@ -23,15 +23,15 @@ public class TarefaRepository {
     public void init() {
         try {
             if (this.emf == null) {
-                System.out.println("⚙️ Inicializando EntityManagerFactory via TarefaRepository.init()...");
+                System.out.println("[DB] Inicializando EntityManagerFactory (TarefaRepository.init).");
 
                 Map<String, Object> cloudProps = resolveCloudDatabaseProperties();
 
                 if (cloudProps != null) {
-                    System.out.println("✅ Detectado ambiente gerenciado. Inicializando com configurações provenientes das variáveis de ambiente.");
+                    System.out.println("[DB] Ambiente gerenciado detectado. Utilizando variáveis de ambiente para configurar o banco.");
                     this.emf = Persistence.createEntityManagerFactory("tarefasPU", cloudProps);
                 } else {
-                    System.out.println("✅ Ambiente local detectado. Utilizando configurações declaradas em persistence.xml.");
+                    System.out.println("[DB] Variáveis de ambiente específicas não encontradas. Utilizando persistence.xml (ambiente local).");
                     this.emf = Persistence.createEntityManagerFactory("tarefasPU");
                 }
             }
@@ -43,7 +43,11 @@ public class TarefaRepository {
 
     private EntityManager getEntityManager() {
         if (emf == null) {
-            throw new IllegalStateException("❌ EntityManagerFactory não foi inicializado!");
+            System.out.println("[DB] EntityManagerFactory não inicializado. Tentando reinicializar...");
+            init();
+            if (emf == null) {
+                throw new IllegalStateException("EntityManagerFactory não foi inicializado.");
+            }
         }
         return emf.createEntityManager();
     }
@@ -160,17 +164,20 @@ public class TarefaRepository {
             DatabaseCredentials credentials = null;
 
             if (jdbcUrlVar != null) {
-                credentials = parseDatabaseUrl(jdbcUrlVar);
-                System.out.println("🔍 Usando JDBC_DATABASE_URL para configuração do banco.");
+                credentials = parseDatabaseUrl(jdbcUrlVar, true);
+                System.out.println("[DB] Usando JDBC_DATABASE_URL.");
             } else if (databaseUrlVar != null) {
-                credentials = parseDatabaseUrl(databaseUrlVar);
-                System.out.println("🔍 Usando DATABASE_URL para configuração do banco.");
+                credentials = parseDatabaseUrl(databaseUrlVar, false);
+                System.out.println("[DB] Usando DATABASE_URL.");
             } else {
                 credentials = resolveFromPgPieces(env);
+                if (credentials != null) {
+                    System.out.println("[DB] Usando variáveis PGHOST/PGDATABASE.");
+                }
             }
 
             if (credentials == null) {
-                System.out.println("ℹ️ Variáveis de ambiente JDBC_DATABASE_URL/DATABASE_URL/PG* não encontradas.");
+                System.out.println("[DB] Variáveis JDBC_DATABASE_URL/DATABASE_URL/PG* não encontradas.");
                 return null;
             }
 
@@ -202,25 +209,27 @@ public class TarefaRepository {
 
             return props;
         } catch (URISyntaxException ex) {
-            System.err.println("❌ Não foi possível interpretar as variáveis de ambiente do banco: " + ex.getMessage());
+            System.err.println("[DB] Não foi possível interpretar as variáveis de ambiente do banco: " + ex.getMessage());
             return null;
         }
     }
 
-    private DatabaseCredentials parseDatabaseUrl(String rawUrl) throws URISyntaxException {
+    private DatabaseCredentials parseDatabaseUrl(String rawUrl, boolean alreadyJdbc) throws URISyntaxException {
         String sanitized = trimToNull(rawUrl);
         if (sanitized == null) {
             return null;
         }
 
-        if (sanitized.startsWith("jdbc:")) {
-            sanitized = sanitized.substring("jdbc:".length());
-        }
-        if (sanitized.startsWith("postgres://")) {
-            sanitized = "postgresql://" + sanitized.substring("postgres://".length());
+        String jdbcCandidate = sanitized;
+        if (!alreadyJdbc) {
+            if (jdbcCandidate.startsWith("postgres://")) {
+                jdbcCandidate = "jdbc:postgresql://" + jdbcCandidate.substring("postgres://".length());
+            } else if (jdbcCandidate.startsWith("postgresql://")) {
+                jdbcCandidate = "jdbc:" + jdbcCandidate;
+            }
         }
 
-        URI uri = new URI(sanitized);
+        URI uri = new URI(stripJdbcPrefix(jdbcCandidate));
 
         StringBuilder jdbcBuilder = new StringBuilder("jdbc:postgresql://")
                 .append(uri.getHost());
@@ -253,6 +262,7 @@ public class TarefaRepository {
             }
         }
 
+        System.out.println("[DB] JDBC final montado: " + jdbcUrl);
         return new DatabaseCredentials(jdbcUrl, username, password);
     }
 
@@ -260,6 +270,10 @@ public class TarefaRepository {
         if (value == null) return null;
         String trimmed = value.trim();
         return trimmed.isEmpty() ? null : trimmed;
+    }
+
+    private String stripJdbcPrefix(String jdbcUrl) {
+        return jdbcUrl.startsWith("jdbc:") ? jdbcUrl.substring("jdbc:".length()) : jdbcUrl;
     }
 
     private DatabaseCredentials resolveFromPgPieces(Map<String, String> env) {
@@ -279,13 +293,9 @@ public class TarefaRepository {
         jdbc.append("/").append(db);
 
         String extraOptions = trimToNull(env.get("PGSSLMODE"));
-        if (extraOptions != null) {
-            jdbc.append("?sslmode=").append(extraOptions);
-        } else {
-            jdbc.append("?sslmode=require");
-        }
+        jdbc.append("?sslmode=").append(extraOptions != null ? extraOptions : "require");
 
-        System.out.println("🔍 Montando JDBC a partir das variáveis PGHOST/PGDATABASE.");
+        System.out.println("[DB] Montando JDBC a partir de PGHOST/PGDATABASE.");
         return new DatabaseCredentials(jdbc.toString(), null, null);
     }
 
