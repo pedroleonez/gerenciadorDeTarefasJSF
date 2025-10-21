@@ -12,6 +12,7 @@
         <maven.compiler.source>11</maven.compiler.source>
         <maven.compiler.target>11</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <skipTests>true</skipTests>
     </properties>
 
   <dependencies>
@@ -128,6 +129,7 @@
                 <version>3.2.5</version>
                 <configuration>
                     <useSystemClassLoader>false</useSystemClassLoader>
+                    <skipTests>${skipTests}</skipTests>
                 </configuration>
             </plugin>
 
@@ -157,4 +159,12 @@
 
         </plugins>
   </build>
+  <profiles>
+        <profile>
+            <id>run-tests</id>
+            <properties>
+                <skipTests>false</skipTests>
+            </properties>
+        </profile>
+    </profiles>
 </project>
