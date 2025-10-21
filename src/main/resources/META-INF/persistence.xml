@@ -11,33 +11,14 @@
         <class>pedroleonez.gerenciadordetarefasjsf.model.Tarefa</class>
 
         <properties>
-            <!-- 🌍 Detecta ambiente automaticamente -->
             <property name="javax.persistence.jdbc.driver" value="org.postgresql.Driver"/>
-
-            <!-- 🧠 Se estiver no Heroku, usa as variáveis JDBC_DATABASE_* -->
-            <property name="javax.persistence.jdbc.url"
-                      value="#{systemEnvironment['JDBC_DATABASE_URL'] != null ?
-                               systemEnvironment['JDBC_DATABASE_URL'] :
-                               'jdbc:postgresql://localhost:5432/gerenciador_tarefas'}"/>
-
-            <property name="javax.persistence.jdbc.user"
-                      value="#{systemEnvironment['JDBC_DATABASE_USERNAME'] != null ?
-                               systemEnvironment['JDBC_DATABASE_USERNAME'] :
-                               'postgres'}"/>
-
-            <property name="javax.persistence.jdbc.password"
-                      value="#{systemEnvironment['JDBC_DATABASE_PASSWORD'] != null ?
-                               systemEnvironment['JDBC_DATABASE_PASSWORD'] :
-                               'postgres'}"/>
-
+            <property name="javax.persistence.jdbc.url" value="jdbc:postgresql://localhost:5432/db_todo"/>
+            <property name="javax.persistence.jdbc.user" value="pedrol"/>
+            <property name="javax.persistence.jdbc.password" value="1234"/>
             <property name="hibernate.dialect" value="org.hibernate.dialect.PostgreSQLDialect"/>
-            <property name="hibernate.hbm2ddl.auto" value="update"/>
+            <property name="hibernate.hbm2ddl.auto" value="create"/>
             <property name="hibernate.show_sql" value="false"/>
             <property name="hibernate.format_sql" value="false"/>
-
-            <!-- 🔒 SSL para Render/Heroku -->
-            <property name="hibernate.connection.sslmode"
-                      value="#{systemEnvironment['JDBC_DATABASE_URL'] != null ? 'require' : 'disable'}"/>
         </properties>
     </persistence-unit>
 
