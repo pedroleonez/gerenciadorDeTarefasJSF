@@ -19,6 +19,7 @@ public class TarefaRepository {
 
     public TarefaRepository() {}
 
+    // Inicializa o EntityManagerFactory logo após o CDI criar o bean.
     @PostConstruct
     public void init() {
         try {
@@ -41,6 +42,7 @@ public class TarefaRepository {
         }
     }
 
+    // Garante acesso ao EntityManager recriando o factory caso ele ainda não exista.
     private EntityManager getEntityManager() {
         if (emf == null) {
             System.out.println("[DB] EntityManagerFactory não inicializado. Tentando reinicializar...");
@@ -163,6 +165,7 @@ public class TarefaRepository {
 
             DatabaseCredentials credentials = null;
 
+            // Preferência: URL já em formato JDBC -> URL estilo Heroku -> peças PGHOST/PGDATABASE.
             if (jdbcUrlVar != null) {
                 credentials = parseDatabaseUrl(jdbcUrlVar, true);
                 System.out.println("[DB] Usando JDBC_DATABASE_URL.");
@@ -192,6 +195,7 @@ public class TarefaRepository {
             }
 
             Map<String, Object> props = new HashMap<>();
+            // Completa o conjunto de propriedades enviadas ao Hibernate quando estivermos na nuvem.
             props.put("javax.persistence.jdbc.driver", "org.postgresql.Driver");
             props.put("javax.persistence.jdbc.url", credentials.jdbcUrl);
 
@@ -214,6 +218,7 @@ public class TarefaRepository {
         }
     }
 
+    // Converte as URLs suportadas (jdbc, postgres://, postgresql://) para um JDBC completo + sslmode.
     private DatabaseCredentials parseDatabaseUrl(String rawUrl, boolean alreadyJdbc) throws URISyntaxException {
         String sanitized = trimToNull(rawUrl);
         if (sanitized == null) {
@@ -276,6 +281,7 @@ public class TarefaRepository {
         return jdbcUrl.startsWith("jdbc:") ? jdbcUrl.substring("jdbc:".length()) : jdbcUrl;
     }
 
+    // Fallback para plataformas que exportam variáveis PGHOST/PGDATABASE/PGPORT em vez da URL completa.
     private DatabaseCredentials resolveFromPgPieces(Map<String, String> env) {
         String host = trimToNull(env.get("PGHOST"));
         String db = trimToNull(env.get("PGDATABASE"));
@@ -299,6 +305,7 @@ public class TarefaRepository {
         return new DatabaseCredentials(jdbc.toString(), null, null);
     }
 
+    // Estrutura simples para transporte das credenciais derivadas das variáveis de ambiente.
     private static class DatabaseCredentials {
         private final String jdbcUrl;
         private final String username;
