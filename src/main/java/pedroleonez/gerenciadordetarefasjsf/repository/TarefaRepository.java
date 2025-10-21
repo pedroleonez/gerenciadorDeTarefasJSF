@@ -28,10 +28,10 @@ public class TarefaRepository {
                 Map<String, Object> cloudProps = resolveCloudDatabaseProperties();
 
                 if (cloudProps != null) {
-                    System.out.println("✅ Detectado ambiente Heroku/Render. Inicializando com banco gerenciado.");
+                    System.out.println("✅ Detectado ambiente gerenciado. Inicializando com configurações provenientes das variáveis de ambiente.");
                     this.emf = Persistence.createEntityManagerFactory("tarefasPU", cloudProps);
                 } else {
-                    System.out.println("✅ Ambiente local detectado. Utilizando configurações de persistence.xml.");
+                    System.out.println("✅ Ambiente local detectado. Utilizando configurações declaradas em persistence.xml.");
                     this.emf = Persistence.createEntityManagerFactory("tarefasPU");
                 }
             }
@@ -151,25 +151,38 @@ public class TarefaRepository {
      */
     private Map<String, Object> resolveCloudDatabaseProperties() {
         try {
-            String jdbcUrlVar = trimToNull(System.getenv("JDBC_DATABASE_URL"));
-            String databaseUrlVar = trimToNull(System.getenv("DATABASE_URL"));
-            String jdbcUserVar = trimToNull(System.getenv("JDBC_DATABASE_USERNAME"));
-            String jdbcPassVar = trimToNull(System.getenv("JDBC_DATABASE_PASSWORD"));
+            Map<String, String> env = System.getenv();
+            String jdbcUrlVar = trimToNull(env.get("JDBC_DATABASE_URL"));
+            String databaseUrlVar = trimToNull(env.get("DATABASE_URL"));
+            String jdbcUserVar = trimToNull(env.get("JDBC_DATABASE_USERNAME"));
+            String jdbcPassVar = trimToNull(env.get("JDBC_DATABASE_PASSWORD"));
 
             DatabaseCredentials credentials = null;
 
             if (jdbcUrlVar != null) {
                 credentials = parseDatabaseUrl(jdbcUrlVar);
+                System.out.println("🔍 Usando JDBC_DATABASE_URL para configuração do banco.");
             } else if (databaseUrlVar != null) {
                 credentials = parseDatabaseUrl(databaseUrlVar);
+                System.out.println("🔍 Usando DATABASE_URL para configuração do banco.");
+            } else {
+                credentials = resolveFromPgPieces(env);
             }
 
             if (credentials == null) {
+                System.out.println("ℹ️ Variáveis de ambiente JDBC_DATABASE_URL/DATABASE_URL/PG* não encontradas.");
                 return null;
             }
 
             String username = jdbcUserVar != null ? jdbcUserVar : credentials.username;
             String password = jdbcPassVar != null ? jdbcPassVar : credentials.password;
+
+            if (username == null) {
+                username = trimToNull(env.get("PGUSER"));
+            }
+            if (password == null) {
+                password = trimToNull(env.get("PGPASSWORD"));
+            }
 
             Map<String, Object> props = new HashMap<>();
             props.put("javax.persistence.jdbc.driver", "org.postgresql.Driver");
@@ -247,6 +260,33 @@ public class TarefaRepository {
         if (value == null) return null;
         String trimmed = value.trim();
         return trimmed.isEmpty() ? null : trimmed;
+    }
+
+    private DatabaseCredentials resolveFromPgPieces(Map<String, String> env) {
+        String host = trimToNull(env.get("PGHOST"));
+        String db = trimToNull(env.get("PGDATABASE"));
+
+        if (host == null || db == null) {
+            return null;
+        }
+
+        String port = trimToNull(env.get("PGPORT"));
+
+        StringBuilder jdbc = new StringBuilder("jdbc:postgresql://").append(host);
+        if (port != null) {
+            jdbc.append(":").append(port);
+        }
+        jdbc.append("/").append(db);
+
+        String extraOptions = trimToNull(env.get("PGSSLMODE"));
+        if (extraOptions != null) {
+            jdbc.append("?sslmode=").append(extraOptions);
+        } else {
+            jdbc.append("?sslmode=require");
+        }
+
+        System.out.println("🔍 Montando JDBC a partir das variáveis PGHOST/PGDATABASE.");
+        return new DatabaseCredentials(jdbc.toString(), null, null);
     }
 
     private static class DatabaseCredentials {
