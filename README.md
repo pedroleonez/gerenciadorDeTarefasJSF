@@ -2,6 +2,9 @@
 
 Aplicação web para controle de tarefas construída com Javax, PrimeFaces e Hibernate. Permite cadastrar, editar, filtrar e concluir tarefas mantendo foco nas atividades em andamento.
 
+## Deploy online
+- Acesse a aplicação: https://gerenciador-de-tarefas-jsf-6a3af5974945.herokuapp.com/
+
 ## Principais recursos
 - Cadastro completo de tarefas com validação (título, descrição, responsável, prioridade, prazo e situação).
 - Modal para criação/edição com feedback de validação amigável.
