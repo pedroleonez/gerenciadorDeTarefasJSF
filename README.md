@@ -56,9 +56,25 @@ git clone https://github.com/pedroleonez/gerenciadorDeTarefasJSF.git
 
 O artefato `target/gerenciadorDeTarefasJSF.war` pode ser implantado em um container compatível com Servlet 4 (ex.: Tomcat 9). Após o deploy, acesse `http://localhost:8080/gerenciadorDeTarefasJSF`.
 
+### Deploy no Heroku
+O projeto inclui um `Procfile` que executa o Tomcat embarcado via `webapp-runner`. Para publicar no Heroku:
+
+1. Realize o build (`./mvnw clean package`) e faça o push do código para o app.
+2. Configure as variáveis de ambiente com as credenciais do banco gerenciado (Render ou outro PostgreSQL):
+   ```bash
+   heroku config:set \
+     JDBC_DATABASE_URL="jdbc:postgresql://<host>/<db>?sslmode=require" \
+     JDBC_DATABASE_USERNAME="<usuario>" \
+     JDBC_DATABASE_PASSWORD="<senha>" \
+     --app gerenciador-de-tarefas-jsf
+   ```
+3. Reinicie a dyno (`heroku restart --app gerenciador-de-tarefas-jsf`) e acompanhe os logs (`heroku logs --tail`) para verificar a conexão (`[DB] Usando JDBC_DATABASE_URL.`).
+
+Quando essas variáveis não estão presentes, a aplicação usa automaticamente o banco local configurado em `persistence.xml`.
+
 ## Testes
 ```bash
-./mvnw test
+./mvnw -Prun-tests test
 ```
 
 Os testes configuram automaticamente a unidade de persistência `tarefasPU-test`, utilizando um banco H2 em memória (não requer configuração externa).
